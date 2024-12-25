@@ -1,17 +1,42 @@
 from fastapi import FastAPI, HTTPException
-from models import Account, Project, FundProject, Stake, UpdateRewardRate, DistributeTokens, UnlockAccount
+from models import Account, Project, FundProject, Stake, UpdateRewardRate, DistributeTokens, UnlockAccount, Register, Login
 from defi_api import DeFiAPI
+from db import register_user, authenticate_user, create_db
 
 app = FastAPI()
 
 api = DeFiAPI()
 
+
+@app.on_event("startup")
+async def startup():
+    create_db()
 @app.get("/accounts")
 async def get_accounts():
     try:
         return api.account()
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+# Register a new user
+@app.post("/register")
+async def register(user: Register):
+    address = register_user(user.username, user.password)
+    if not address:
+        raise HTTPException(status_code=400, detail="Username already exists")
+
+    return {"status": "success", "message": "User registered successfully", "address": address}
+
+
+# Login a user
+@app.post("/login")
+async def login(user: Login):
+    address = authenticate_user(user.username, user.password)
+    if not address:
+        raise HTTPException(status_code=400, detail="Invalid username or password")
+
+    return {"status": "success", "message": "User logged in successfully", "address": address}
 
 @app.get("/balance/{address}")
 async def get_balance(address: str):

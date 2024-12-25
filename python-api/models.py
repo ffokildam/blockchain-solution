@@ -31,3 +31,11 @@ class DistributeTokens(BaseModel):
 class UnlockAccount(BaseModel):
     address: str
     password: str
+
+class Register(BaseModel):
+    username: str
+    password: str
+
+class Login(BaseModel):
+    username: str
+    password: str
