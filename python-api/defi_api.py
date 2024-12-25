@@ -5,7 +5,7 @@ import json
 class DeFiAPI:
     w3 = web3.Web3(web3.HTTPProvider("http://127.0.0.1:8545"))
 
-    contract_address = web3.Web3.to_checksum_address("0xCBe1376958aDA857fdeC4aD03ff99aC372CA6056")
+    contract_address = web3.Web3.to_checksum_address("0x54FA8223320487FC7639352FC94e0f40B2eDd810")
 
     with open("abi.txt", "r") as f:
         abi = json.load(f)
@@ -93,10 +93,38 @@ class DeFiAPI:
         except Exception as e:
             print(f"Error minting tokens: {e}")
 
-# Примеры использования
+    def get_staking_positions_by_address(self, address):
+        address = web3.Web3.to_checksum_address(address)
+
+        try:
+            # Call the contract's getStakingPositionsByAddress method
+            positions_data = self.contract.functions.getStakingPositionsByAddress(address).call()
+
+            # Convert the result into a list of SimplifiedStakingPosition
+            positions = [
+                {
+                    "positionId": position[0],
+                    "amount": position[1],
+                    "durationDays": position[2]
+                }
+                for position in positions_data
+            ]
+            return positions
+        except Exception as e:
+            print(f"Error fetching staking positions: {e}")
+            return []
+
+    def exchange_tokens(self, to, amount, address_from):
+        address_from = web3.Web3.to_checksum_address(address_from)
+        exchange_tokens_function = self.contract.functions.exchangeTokens(to, amount)
+        tx = exchange_tokens_function.transact({"from": address_from})
+        self.w3.eth.wait_for_transaction_receipt(tx)
+
 # api = DeFiAPI()
+# print(api.get_staking_positions_by_address("0xDC3F826D35fA315799966ee645a0f48bBf6901E6"))
 # print(api.balance_of("0xDC3F826D35fA315799966ee645a0f48bBf6901E6"))
-#
+# api.exchange_tokens("0x55cB059297A7aa3C0d2c87402E42D8B3e71050b9", 100, "0xDC3F826D35fA315799966ee645a0f48bBf6901E6")
+# #
 # api.mint_tokens("0xDC3F826D35fA315799966ee645a0f48bBf6901E6", 10000, "0xDC3F826D35fA315799966ee645a0f48bBf6901E6")
 # new_address = api.create_new_user("myStrongPassword123")
 #print(f"New account created: {new_address}")

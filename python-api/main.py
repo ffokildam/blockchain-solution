@@ -1,11 +1,20 @@
 from fastapi import FastAPI, HTTPException
-from models import Account, Project, FundProject, Stake, UpdateRewardRate, DistributeTokens, UnlockAccount, Register, Login, MintTokens
+from models import Account, Project, FundProject, Stake, UpdateRewardRate, DistributeTokens, UnlockAccount, Register, Login, MintTokens, ExchangeTokensRequest
 from defi_api import DeFiAPI
 from db import register_user, authenticate_user, create_db
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
 api = DeFiAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.on_event("startup")
@@ -37,7 +46,7 @@ async def login(user: Login):
 @app.get("/balance/{address}")
 async def get_balance(address: str):
     try:
-        balance = api.get_balance(address)
+        balance = api.balance_of(address)
         return {"address": address, "balance": balance}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -74,13 +83,6 @@ async def fund_project(fund_info: FundProject):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@app.get("/get_user_positions/{address}")
-async def get_user_positions(address: str):
-    try:
-        positions = api.get_user_positions(address)
-        return {"address": address, "positions": positions}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
 
 @app.get("/get_user_projects/{address}")
 async def get_user_projects(address: str):
@@ -130,5 +132,21 @@ async def mint_tokens(mint_info: MintTokens):
     try:
         api.mint_tokens(mint_info.recipient_address, mint_info.amount, mint_info.address_from)
         return {"status": "success", "message": f"Successfully minted {mint_info.amount} tokens to {mint_info.recipient_address}"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/get_staking_positions/{address}")
+async def get_staking_positions(address: str):
+    try:
+        staking_positions = api.get_staking_positions_by_address(address)
+        return {"address": address, "staking_positions": staking_positions}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/exchange_tokens")
+async def exchange_tokens_endpoint(exchange_info: ExchangeTokensRequest):
+    try:
+        result = api.exchange_tokens(exchange_info.to, exchange_info.amount, exchange_info.address_from)
+        return result
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

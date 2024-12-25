@@ -43,3 +43,8 @@ class MintTokens(BaseModel):
     recipient_address: str
     amount: int
     address_from: str
+
+class ExchangeTokensRequest(BaseModel):
+    to: str  # Recipient's address
+    amount: int  # Amount of tokens to exchange
+    address_from: str
