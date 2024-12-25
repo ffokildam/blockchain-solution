@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from models import Account, Project, FundProject, Stake, UpdateRewardRate, DistributeTokens, UnlockAccount, Register, Login
+from models import Account, Project, FundProject, Stake, UpdateRewardRate, DistributeTokens, UnlockAccount, Register, Login, MintTokens
 from defi_api import DeFiAPI
 from db import register_user, authenticate_user, create_db
 
@@ -18,8 +18,6 @@ async def get_accounts():
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-
-# Register a new user
 @app.post("/register")
 async def register(user: Register):
     address = register_user(user.username, user.password)
@@ -28,8 +26,6 @@ async def register(user: Register):
 
     return {"status": "success", "message": "User registered successfully", "address": address}
 
-
-# Login a user
 @app.post("/login")
 async def login(user: Login):
     address = authenticate_user(user.username, user.password)
@@ -127,5 +123,12 @@ async def create_new_user(password: str):
     try:
         new_user_address = api.create_new_user(password)
         return {"status": "success", "address": new_user_address}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+@app.post("/mint_tokens")
+async def mint_tokens(mint_info: MintTokens):
+    try:
+        api.mint_tokens(mint_info.recipient_address, mint_info.amount, mint_info.address_from)
+        return {"status": "success", "message": f"Successfully minted {mint_info.amount} tokens to {mint_info.recipient_address}"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

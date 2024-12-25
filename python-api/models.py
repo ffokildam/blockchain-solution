@@ -1,4 +1,3 @@
-# models.py
 from pydantic import BaseModel
 
 class Account(BaseModel):
@@ -39,3 +38,8 @@ class Register(BaseModel):
 class Login(BaseModel):
     username: str
     password: str
+
+class MintTokens(BaseModel):
+    recipient_address: str
+    amount: int
+    address_from: str
